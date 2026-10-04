@@ -1,16 +1,16 @@
-// Somali Highway Racer - Complete Fix Engine (No Safe Spots & Extreme Scaling)
+// Somali Highway Racer - Strict Boundary & Maximum Traffic Pressure Engine
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Responsive Canvas Setup
+// Dynamic Canvas Setup
 function resizeCanvas() {
   canvas.width = Math.min(window.innerWidth - 20, 420);
   canvas.height = window.innerHeight * 0.75;
 }
 resizeCanvas();
 
-// UI Elements
+// UI References
 const scoreVal = document.getElementById('scoreVal');
 const coinsVal = document.getElementById('coinsVal');
 const speedVal = document.getElementById('speedVal');
@@ -52,22 +52,22 @@ const player = {
   color: '#38bdf8'
 };
 
-// Road Margins & Precise Lane Calculations
-const ROAD_LEFT = 40;
-const ROAD_WIDTH = canvas.width - 80;
+// Fixed Road Layout & Exact Center Alignments
+const ROAD_LEFT = 45;
+const ROAD_WIDTH = canvas.width - 90;
 const ROAD_RIGHT = ROAD_LEFT + ROAD_WIDTH;
 
-// Haadadka baabuurta cadowga ah iyo gaarigaaga loogu talagalay (Center Alignment)
+// Calculation for 3 Distinct Lanes (Centered in Road)
 function getLanePositions() {
   const laneGap = ROAD_WIDTH / 3;
   return [
-    ROAD_LEFT + (laneGap * 0.5) - 20, // Haadka Bidix (Left Lane Center)
-    ROAD_LEFT + (laneGap * 1.5) - 20, // Haadka Dhexe (Middle Lane Center)
-    ROAD_LEFT + (laneGap * 2.5) - 20  // Haadka Midig (Right Lane Center)
+    ROAD_LEFT + (laneGap * 0.5) - 20, // Haadka Bidix (Exact Center)
+    ROAD_LEFT + (laneGap * 1.5) - 20, // Haadka Dhexe (Exact Center)
+    ROAD_LEFT + (laneGap * 2.5) - 20  // Haadka Midig (Exact Center)
   ];
 }
 
-// Controls (Touch Engine)
+// Mobile Touch Controls
 let isTouching = false;
 let touchStartX = 0;
 let touchStartY = 0;
@@ -102,16 +102,16 @@ canvas.addEventListener('touchend', () => {
   isTouching = false;
 });
 
-// Player Physics & Strict Road Boundary (Gudaha Laamiga oo qiyaasan)
+// Player Movement & Absolute Boundary Lockdown (Khaas ah: Safe-spot Elimination)
 function updatePlayerPhysics() {
   if (nitroAmount < maxNitro && !isNitroActive) nitroAmount += 0.15;
   nitroBar.style.width = `${(nitroAmount / maxNitro) * 100}%`;
 
   const lanes = getLanePositions();
   
-  // Xadka gaarigaagu aadi karo si uusan u helin "Safe Spot" ee laamiga dhinacisa ah
-  const minX = lanes[0]; // Haadka bidix ee baabuurtu ka timaado
-  const maxX = lanes[2]; // Haadka midig ee baabuurtu ka timaado
+  // WAXAA DHIBAATADII SHAAFARAY: Player-ku ma ka tagi karo X-ka Haadka 1-aad ama kan 3-aad
+  const minX = lanes[0]; // Xadka dhabta ah ee haadka ugu horreeya
+  const maxX = lanes[2]; // Xadka dhabta ah ee haadka ugu dambeeya
 
   if (player.x < minX) player.x = minX;
   if (player.x > maxX) player.x = maxX;
@@ -122,25 +122,25 @@ function updatePlayerPhysics() {
   }
 }
 
-// Environment Graphics
+// Visual Road System
 function drawRoad() {
-  ctx.fillStyle = '#15803d'; // Cawska
+  ctx.fillStyle = '#15803d'; // Green Grass Margin
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = '#1e293b'; // Laamiga
+  ctx.fillStyle = '#1e293b'; // Main Asphalt Road
   ctx.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, canvas.height);
 
   const kerbWidth = 8;
   roadOffset = (roadOffset + currentSpeed) % 40;
 
-  // Kerbs (Caddanka iyo Casaanka)
+  // Red/White Side Kerbs
   for (let y = -40; y < canvas.height; y += 40) {
     ctx.fillStyle = (Math.floor((y + roadOffset) / 40) % 2 === 0) ? '#ef4444' : '#ffffff';
     ctx.fillRect(ROAD_LEFT - kerbWidth, y + roadOffset, kerbWidth, 40);
     ctx.fillRect(ROAD_RIGHT, y + roadOffset, kerbWidth, 40);
   }
 
-  // Dhexda Laamiga (Lanes)
+  // White Lane Markers
   ctx.fillStyle = '#f8fafc';
   const laneGap = ROAD_WIDTH / 3;
 
@@ -150,7 +150,7 @@ function drawRoad() {
   }
 }
 
-// Player Graphics
+// Player Car Visual Engine
 function drawPlayerCar() {
   ctx.save();
 
@@ -177,31 +177,34 @@ function drawPlayerCar() {
   ctx.restore();
 }
 
-// Traffic AI & Scaling Engine
+// AI Traffic & High Score Difficulty Scaling
 let trafficCars = [];
 let coinsList = [];
 let spawnTimer = 0;
 
-// Dynamic Frequency Calculation (Cadaadiska > 8,000 Score)
+// Dynamic Density Scaling (Cadaadis Xad Dhaaf Ah > 8,000 score)
 function getSpawnInterval() {
   if (score > 8000) {
-    let reduction = Math.floor((score - 8000) / 350) * 5;
-    return Math.max(16, 65 - reduction); // Baabuurta aad bay u soo batayaan (Heavy Traffic)
+    let reduction = Math.floor((score - 8000) / 300) * 6;
+    return Math.max(14, 60 - reduction); // Baabuurta aad bay u soo batayaan marba marka ka dambaysa
   }
   return 75;
 }
 
 function spawnTraffic() {
   const lanes = getLanePositions();
-  const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+  
+  // Isku aadi spawning-ka si baabuurta oo dhan ay dhammaan haadadka u wada xiraan
+  const randomIndex = Math.floor(Math.random() * lanes.length);
+  const randomLane = lanes[randomIndex];
+  
   const colors = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-  // Hubi haadka haddii uu ku jiro baabuur aad u dhow
-  const isLaneOccupied = trafficCars.some(car => car.x === randomLane && car.y < 140);
+  const isLaneOccupied = trafficCars.some(car => car.x === randomLane && car.y < 150);
 
   if (!isLaneOccupied) {
-    let extraSpeed = score > 8000 ? Math.min(7, (score - 8000) / 1000) : 0;
+    let extraSpeed = score > 8000 ? Math.min(8, (score - 8000) / 1000) : 0;
 
     trafficCars.push({
       x: randomLane,
@@ -216,7 +219,7 @@ function spawnTraffic() {
 
 function spawnCoin() {
   const lanes = getLanePositions();
-  const randomLane = lanes[Math.floor(Math.random() * lanes.length)] + 20;
+  const randomLane = lanes[Math.floor(Math.random() * lanes.length)] + 10;
 
   coinsList.push({
     x: randomLane,
@@ -225,6 +228,7 @@ function spawnCoin() {
   });
 }
 
+// Precise Collision Engine
 function checkCollisions() {
   for (let i = 0; i < trafficCars.length; i++) {
     let car = trafficCars[i];
@@ -254,9 +258,9 @@ function checkCollisions() {
 function gameLoop() {
   if (!isGameRunning || isPaused) return;
 
-  // High Speed Scale
+  // Extreme Speed Boost Marka Score-ku uu Bato
   if (score > 8000) {
-    currentSpeed = baseSpeed + Math.min(10, (score - 8000) / 1000);
+    currentSpeed = baseSpeed + Math.min(12, (score - 8000) / 1000);
   } else {
     currentSpeed = baseSpeed;
   }
@@ -271,7 +275,7 @@ function gameLoop() {
   let currentSpawnRate = getSpawnInterval();
   
   if (spawnTimer % currentSpawnRate === 0) spawnTraffic();
-  if (spawnTimer % 120 === 0) spawnCoin();
+  if (spawnTimer % 110 === 0) spawnCoin();
 
   for (let i = trafficCars.length - 1; i >= 0; i--) {
     let car = trafficCars[i];
@@ -312,7 +316,7 @@ function gameLoop() {
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// State Management
+// UI & Game State Event Handlers
 function startGame() {
   menuModal.classList.add('hidden');
   garageModal.classList.add('hidden');
@@ -322,7 +326,7 @@ function startGame() {
   coins = 0;
   trafficCars = [];
   coinsList = [];
-  player.x = canvas.width / 2 - 20;
+  player.x = getLanePositions()[1]; // Middle Lane Startup
   player.y = canvas.height - 110;
   isGameRunning = true;
   isPaused = false;
@@ -363,4 +367,4 @@ pauseBtn.addEventListener('click', () => {
   isPaused = !isPaused;
   if (!isPaused) gameLoop();
 });
-                                               
+    
