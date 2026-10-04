@@ -1,0 +1,307 @@
+/* style.css - Somali Highway Racer Ultimate Edition */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+}
+
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.game-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 520px;
+  padding: 10px;
+}
+
+/* 1. HUD Top Header */
+.hud-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+.hud-item i {
+  color: #38bdf8;
+  width: 18px;
+  height: 18px;
+}
+
+.hud-item strong {
+  color: #facc15;
+  font-size: 1.1rem;
+}
+
+.icon-btn {
+  background: #334155;
+  border: none;
+  color: #f8fafc;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: #475569;
+  transform: scale(1.05);
+}
+
+/* 2. Main Canvas Frame */
+.canvas-container {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+  border: 3px solid #334155;
+}
+
+#gameCanvas {
+  display: block;
+  background-color: #1e293b;
+}
+
+/* 3. Nitro Booster Bar Gauge */
+.nitro-gauge {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 24px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #0284c7;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nitro-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 50%, #f43f5e 100%);
+  transition: width 0.1s linear;
+  box-shadow: 0 0 12px #38bdf8;
+}
+
+.nitro-text {
+  position: relative;
+  z-index: 2;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* 4. Modals & Overlays */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-card {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 28px 24px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-card.wide {
+  max-width: 460px;
+}
+
+.modal-card.danger {
+  border-color: #ef4444;
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.game-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-bottom: 8px;
+}
+
+.danger-title {
+  color: #ef4444;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.final-stats {
+  background: #0f172a;
+  padding: 16px;
+  border-radius: 10px;
+  margin: 16px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.final-stats strong {
+  color: #38bdf8;
+}
+
+/* 5. Buttons & Action Elements */
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.btn-secondary:hover {
+  background: #475569;
+  transform: translateY(-2px);
+}
+
+/* 6. Car Selector & Shop Layout */
+.car-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.car-card {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.car-card.selected {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.car-card.locked {
+  opacity: 0.6;
+}
+
+.car-card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.car-card-price {
+  font-size: 0.75rem;
+  color: #facc15;
+  }
+  
