@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Somali Highway Racer - Ultimate Edition</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons for UI -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="game-wrapper">
+    <!-- Top Status Bar -->
+    <header class="hud-header">
+      <div class="hud-item">
+        <i data-lucide="trophy"></i>
+        <span>Dhibcaha: <strong id="scoreVal">0</strong></span>
+      </div>
+      <div class="hud-item">
+        <i data-lucide="coins"></i>
+        <span>Laciin (Coins): <strong id="coinsVal">0</strong></span>
+      </div>
+      <div class="hud-item">
+        <i data-lucide="gauge"></i>
+        <span>Speed: <strong id="speedVal">0</strong> km/h</span>
+      </div>
+      <button id="pauseBtn" class="icon-btn"><i data-lucide="pause"></i></button>
+    </header>
+
+    <!-- Main Game Canvas Container -->
+    <div class="canvas-container">
+      <canvas id="gameCanvas" width="480" height="680"></canvas>
+
+      <!-- Nitro Bar Gauge Overlay -->
+      <div class="nitro-gauge">
+        <div id="nitroBar" class="nitro-fill"></div>
+        <span class="nitro-text">NITRO (PRESS SPACE)</span>
+      </div>
+    </div>
+
+    <!-- Main Menu Modal -->
+    <div id="menuModal" class="modal-overlay">
+      <div class="modal-card">
+        <h1 class="game-title">🚗 SOMALI HIGHWAY RACER</h1>
+        <p class="subtitle">Dhig rikoor cusub oo ka dhex bax jidadka Mogadishu & Hargeisa!</p>
+
+        <div class="menu-actions">
+          <button id="startPlayBtn" class="btn btn-primary"><i data-lucide="play"></i> Bilaaw Ciyaarta</button>
+          <button id="openGarageBtn" class="btn btn-secondary"><i data-lucide="car"></i> Garage-ka & Dukaanka</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Garage & Shop Modal -->
+    <div id="garageModal" class="modal-overlay hidden">
+      <div class="modal-card wide">
+        <h2>🏎️ Garashka & Dukaanka Baabuurta</h2>
+        <div class="car-selector-grid" id="carShopGrid">
+          <!-- Dynamically populated via JS -->
+        </div>
+        <button id="closeGarageBtn" class="btn btn-secondary">Ku noqon Menu-ga</button>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-overlay hidden">
+      <div class="modal-card danger">
+        <h2 class="danger-title">💥 SHANQAAN & SHIL!</h2>
+        <p>Baabuurkaagii waa uu burburay!</p>
+        
+        <div class="final-stats">
+          <p>Dhibcaha Final-ka: <strong id="finalScore">0</strong></p>
+          <p>Laciinta aad heshay: <strong id="finalCoins">0</strong></p>
+        </div>
+
+        <div class="menu-actions">
+          <button id="restartGameBtn" class="btn btn-primary"><i data-lucide="rotate-ccw"></i> Dib u Biloob</button>
+          <button id="backToMenuBtn" class="btn btn-secondary">Menu-ga Waaweyn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+  </html>
+  
