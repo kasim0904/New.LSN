@@ -1,4 +1,4 @@
-// Somali Highway Racer - Complete Single Engine Code
+// Somali Highway Racer - Dynamic Lane & Collision Fix Engine
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -52,6 +52,17 @@ const player = {
   color: '#38bdf8'
 };
 
+// Lane Calculator (Si Dynamic ah baabuurta loogu qeybiyo 3-da haad)
+function getLanePositions() {
+  const roadWidth = canvas.width - 80;
+  const laneGap = roadWidth / 3;
+  return [
+    40 + (laneGap * 0.5) - 20, // Haadka 1-aad
+    40 + (laneGap * 1.5) - 20, // Haadka 2-aad
+    40 + (laneGap * 2.5) - 20  // Haadka 3-aad
+  ];
+}
+
 // Smooth Touch Controls
 let isTouching = false;
 let touchStartX = 0;
@@ -87,16 +98,17 @@ canvas.addEventListener('touchend', () => {
   isTouching = false;
 });
 
-// Player Physics & Road Boundaries (Hagaajinta Xadka Bidixda & Midigta)
+// Player Physics & Boundary Locking
 function updatePlayerPhysics() {
   if (nitroAmount < maxNitro && !isNitroActive) nitroAmount += 0.15;
   nitroBar.style.width = `${(nitroAmount / maxNitro) * 100}%`;
 
-  const roadMarginLeft = 45; // Xadka laamiga bidixda si aadan cadadka u marin
-  const roadMarginRight = canvas.width - 45 - player.width;
+  const lanes = getLanePositions();
+  const minX = lanes[0] - 10; // Xadka ugu dambeeya ee bidixda
+  const maxX = lanes[2] + 10; // Xadka ugu dambeeya ee midigta
 
-  if (player.x < roadMarginLeft) player.x = roadMarginLeft;
-  if (player.x > roadMarginRight) player.x = roadMarginRight;
+  if (player.x < minX) player.x = minX;
+  if (player.x > maxX) player.x = maxX;
 
   if (player.y < 20) player.y = 20;
   if (player.y > canvas.height - player.height - 20) {
@@ -131,7 +143,7 @@ function drawRoad() {
   }
 }
 
-// Player Graphics
+// Player Car Graphics
 function drawPlayerCar() {
   ctx.save();
 
@@ -158,34 +170,32 @@ function drawPlayerCar() {
   ctx.restore();
 }
 
-// Traffic & Coins Variables
+// Traffic & Coins Engine
 let trafficCars = [];
 let coinsList = [];
 let spawnTimer = 0;
 
-// Dynamic Difficulty Calculation (Xawliga iyo Cadadisa Koraya)
 function getSpawnInterval() {
   if (score > 8000) {
-    let reduction = Math.floor((score - 8000) / 500) * 3;
-    return Math.max(25, 70 - reduction);
+    let reduction = Math.floor((score - 8000) / 400) * 4;
+    return Math.max(20, 65 - reduction);
   }
-  return 85;
+  return 80;
 }
 
-// Spawning Traffic
 function spawnTraffic() {
-  const lanes = [85, 190, 295];
+  const lanes = getLanePositions();
   const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
   const colors = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-  const isLaneOccupied = trafficCars.some(car => Math.abs(car.x - (randomLane - 20)) < 10 && car.y < 140);
+  const isLaneOccupied = trafficCars.some(car => Math.abs(car.x - randomLane) < 15 && car.y < 140);
 
   if (!isLaneOccupied) {
-    let extraSpeed = score > 8000 ? Math.min(5, (score - 8000) / 2000) : 0;
+    let extraSpeed = score > 8000 ? Math.min(6, (score - 8000) / 1500) : 0;
 
     trafficCars.push({
-      x: randomLane - 20,
+      x: randomLane,
       y: -90,
       width: 40,
       height: 70,
@@ -195,10 +205,9 @@ function spawnTraffic() {
   }
 }
 
-// Spawning Coins
 function spawnCoin() {
-  const lanes = [85, 190, 295];
-  const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+  const lanes = getLanePositions();
+  const randomLane = lanes[Math.floor(Math.random() * lanes.length)] + 20;
 
   coinsList.push({
     x: randomLane,
@@ -207,7 +216,6 @@ function spawnCoin() {
   });
 }
 
-// Collisions Logic
 function checkCollisions() {
   for (let i = 0; i < trafficCars.length; i++) {
     let car = trafficCars[i];
@@ -233,12 +241,12 @@ function checkCollisions() {
   }
 }
 
-// Main Game Loop Engine
+// Game Loop Engine
 function gameLoop() {
   if (!isGameRunning || isPaused) return;
 
   if (score > 8000) {
-    currentSpeed = baseSpeed + Math.min(8, (score - 8000) / 1500);
+    currentSpeed = baseSpeed + Math.min(8, (score - 8000) / 1200);
   } else {
     currentSpeed = baseSpeed;
   }
@@ -253,7 +261,7 @@ function gameLoop() {
   let currentSpawnRate = getSpawnInterval();
   
   if (spawnTimer % currentSpawnRate === 0) spawnTraffic();
-  if (spawnTimer % 140 === 0) spawnCoin();
+  if (spawnTimer % 130 === 0) spawnCoin();
 
   for (let i = trafficCars.length - 1; i >= 0; i--) {
     let car = trafficCars[i];
@@ -294,7 +302,7 @@ function gameLoop() {
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// State Handlers
+// Game States & Buttons
 function startGame() {
   menuModal.classList.add('hidden');
   garageModal.classList.add('hidden');
@@ -321,7 +329,6 @@ function endGame() {
   gameOverModal.classList.remove('hidden');
 }
 
-// Event Listeners
 startPlayBtn.addEventListener('click', startGame);
 restartGameBtn.addEventListener('click', startGame);
 
@@ -345,4 +352,3 @@ pauseBtn.addEventListener('click', () => {
   isPaused = !isPaused;
   if (!isPaused) gameLoop();
 });
-    
