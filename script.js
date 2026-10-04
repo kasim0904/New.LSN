@@ -1,9 +1,16 @@
-// Somali Highway Racer - Part 1: Setup & Touch Controls
+// Somali Highway Racer - Part 1: Setup & Touch Engine
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// 1. UI Elements
+// Canvas Responsive Setup
+function resizeCanvas() {
+  canvas.width = Math.min(window.innerWidth - 20, 420);
+  canvas.height = window.innerHeight * 0.75;
+}
+resizeCanvas();
+
+// UI Elements
 const scoreVal = document.getElementById('scoreVal');
 const coinsVal = document.getElementById('coinsVal');
 const speedVal = document.getElementById('speedVal');
@@ -20,7 +27,7 @@ const restartGameBtn = document.getElementById('restartGameBtn');
 const backToMenuBtn = document.getElementById('backToMenuBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 
-// 2. Engine State Variables
+// Engine State
 let isGameRunning = false;
 let isPaused = false;
 let animationFrameId;
@@ -31,155 +38,167 @@ let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let roadOffset = 0;
 
-// 3. Nitro System
+// Nitro System
 let nitroAmount = 100;
 let isNitroActive = false;
 const maxNitro = 100;
 
-// 4. Player Object
+// Player Object
 const player = {
-  x: canvas.width / 2 - 21,
-  y: canvas.height - 120,
-  width: 42,
-  height: 75,
-  color: '#38bdf8',
-  speedX: 0,
-  speedY: 0,
-  accel: 0.8,
-  friction: 0.82
+  x: canvas.width / 2 - 20,
+  y: canvas.height - 110,
+  width: 40,
+  height: 70,
+  color: '#38bdf8'
 };
 
-// 5. Touch System (Sida Talefanka loogu maamulo)
-let touchStartX = null;
-let touchStartY = null;
+// Smooth Mobile Touch Controls
+let isTouching = false;
+let touchStartX = 0;
+let touchStartY = 0;
 
 canvas.addEventListener('touchstart', (e) => {
+  if (!isGameRunning) return;
+  isTouching = true;
   const touch = e.touches[0];
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
+  const rect = canvas.getBoundingClientRect();
+  touchStartX = touch.clientX - rect.left;
+  touchStartY = touch.clientY - rect.top;
 }, { passive: true });
 
 canvas.addEventListener('touchmove', (e) => {
-  if (!touchStartX || !touchStartY || !isGameRunning) return;
-
+  if (!isTouching || !isGameRunning) return;
   const touch = e.touches[0];
-  const diffX = touch.clientX - touchStartX;
-  const diffY = touch.clientY - touchStartY;
+  const rect = canvas.getBoundingClientRect();
+  const touchX = touch.clientX - rect.left;
+  const touchY = touch.clientY - rect.top;
 
-  // Dhaqdhaqaaqa farta lagu jiido
-  player.x += diffX * 0.15;
-  player.y += diffY * 0.15;
+  const moveX = touchX - touchStartX;
+  const moveY = touchY - touchStartY;
 
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
+  player.x += moveX;
+  player.y += moveY;
+
+  touchStartX = touchX;
+  touchStartY = touchY;
 }, { passive: true });
 
 canvas.addEventListener('touchend', () => {
-  touchStartX = null;
-  touchStartY = null;
+  isTouching = false;
 });
-// Somali Highway Racer - Part 2: Physics & Drawing Engines
+// Somali Highway Racer - Part 2: Physics & Rendering Engines
 
-// 6. Physics & Boundaries
+// 6. Player Physics & Road Boundaries
 function updatePlayerPhysics() {
-  if (nitroAmount < maxNitro) nitroAmount += 0.15;
+  if (nitroAmount < maxNitro && !isNitroActive) nitroAmount += 0.15;
   nitroBar.style.width = `${(nitroAmount / maxNitro) * 100}%`;
 
-  player.x += player.speedX;
-  player.y += player.speedY;
-  player.speedX *= player.friction;
-  player.speedY *= player.friction;
+  const roadMarginLeft = 45;
+  const roadMarginRight = canvas.width - 45 - player.width;
 
-  const roadMarginLeft = 50;
-  const roadMarginRight = canvas.width - 50 - player.width;
-
+  // X-axis limits (Hagaajinta xadka wadada)
   if (player.x < roadMarginLeft) player.x = roadMarginLeft;
   if (player.x > roadMarginRight) player.x = roadMarginRight;
+
+  // Y-axis limits
   if (player.y < 20) player.y = 20;
   if (player.y > canvas.height - player.height - 20) {
     player.y = canvas.height - player.height - 20;
   }
 }
 
-// 7. Road Graphics & Animation
+// 7. Dynamic Road & Lane Graphics
 function drawRoad() {
+  // cawska dhinacyada
   ctx.fillStyle = '#15803d';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const roadWidth = canvas.width - 100;
+  // Jidka laamiga ah
+  const roadWidth = canvas.width - 80;
   ctx.fillStyle = '#1e293b';
-  ctx.fillRect(50, 0, roadWidth, canvas.height);
+  ctx.fillRect(40, 0, roadWidth, canvas.height);
 
-  const kerbWidth = 10;
+  // Dhagaxyada cas iyo caddaan ka ah (Kerbs)
+  const kerbWidth = 8;
   roadOffset = (roadOffset + currentSpeed) % 40;
 
   for (let y = -40; y < canvas.height; y += 40) {
     ctx.fillStyle = (Math.floor((y + roadOffset) / 40) % 2 === 0) ? '#ef4444' : '#ffffff';
-    ctx.fillRect(40, y + roadOffset, kerbWidth, 40);
-    ctx.fillRect(canvas.width - 50, y + roadOffset, kerbWidth, 40);
+    ctx.fillRect(32, y + roadOffset, kerbWidth, 40);
+    ctx.fillRect(canvas.width - 40, y + roadOffset, kerbWidth, 40);
   }
 
+  // Khadadka caddaanka ah ee kala saara labada haad
   ctx.fillStyle = '#f8fafc';
   const laneGap = roadWidth / 3;
 
   for (let y = -40; y < canvas.height; y += 50) {
-    ctx.fillRect(50 + laneGap - 3, y + roadOffset, 6, 25);
-    ctx.fillRect(50 + (laneGap * 2) - 3, y + roadOffset, 6, 25);
+    ctx.fillRect(40 + laneGap - 2, y + roadOffset, 4, 25);
+    ctx.fillRect(40 + (laneGap * 2) - 2, y + roadOffset, 4, 25);
   }
 }
 
-// 8. Player Car Render
+// 8. Draw Player Car Graphics
 function drawPlayerCar() {
   ctx.save();
 
+  // Dabka Nitro-da
   if (isNitroActive) {
     ctx.fillStyle = '#f43f5e';
     ctx.beginPath();
-    ctx.arc(player.x + 12, player.y + player.height + 6, 6 + Math.random() * 4, 0, Math.PI * 2);
-    ctx.arc(player.x + player.width - 12, player.y + player.height + 6, 6 + Math.random() * 4, 0, Math.PI * 2);
+    ctx.arc(player.x + 10, player.y + player.height + 5, 5 + Math.random() * 4, 0, Math.PI * 2);
+    ctx.arc(player.x + player.width - 10, player.y + player.height + 5, 5 + Math.random() * 4, 0, Math.PI * 2);
     ctx.fill();
   }
 
+  // Jirka Baabuurka
   ctx.fillStyle = player.color;
   ctx.beginPath();
   ctx.roundRect(player.x, player.y, player.width, player.height, 10);
   ctx.fill();
 
+  // Muraayadda hore
   ctx.fillStyle = '#0f172a';
-  ctx.fillRect(player.x + 6, player.y + 18, player.width - 12, 22);
+  ctx.fillRect(player.x + 5, player.y + 16, player.width - 10, 20);
 
+  // Nalalka Hore
   ctx.fillStyle = isNitroActive ? '#38bdf8' : '#facc15';
-  ctx.fillRect(player.x + 4, player.y + 2, 8, 5);
-  ctx.fillRect(player.x + player.width - 12, player.y + 2, 8, 5);
+  ctx.fillRect(player.x + 3, player.y + 2, 8, 4);
+  ctx.fillRect(player.x + player.width - 11, player.y + 2, 8, 4);
 
   ctx.restore();
 }
-// Somali Highway Racer - Part 3: Traffic, Items & Collision Logic
+// Somali Highway Racer - Part 3: Traffic, Items & Collision Engine
 
 let trafficCars = [];
 let coinsList = [];
 let spawnTimer = 0;
 
-// 9. Spawning Traffic Cars
+// 9. Spawning Traffic Cars (Kala bixinta baabuurta si aysan isku dhex samaysmin)
 function spawnTraffic() {
-  const lanes = [110, 240, 370];
+  const lanes = [80, 190, 300]; // 3-da haad ee wadada
   const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
   const colors = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-  trafficCars.push({
-    x: randomLane - 21,
-    y: -80,
-    width: 42,
-    height: 75,
-    speed: Math.random() * 2 + 3,
-    color: randomColor
-  });
+  // Hubi in haadkan uusan ku jirin baabuur aad u dhow
+  const isLaneOccupied = trafficCars.some(car => car.x === (randomLane - 20) && car.y < 120);
+
+  if (!isLaneOccupied) {
+    trafficCars.push({
+      x: randomLane - 20,
+      y: -90,
+      width: 40,
+      height: 70,
+      speed: Math.random() * 2 + 3,
+      color: randomColor
+    });
+  }
 }
 
 // 10. Spawning Collectible Coins
 function spawnCoin() {
-  const lanes = [110, 240, 370];
+  const lanes = [80, 190, 300];
   const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
 
   coinsList.push({
@@ -189,9 +208,9 @@ function spawnCoin() {
   });
 }
 
-// 11. Collisions & Scoring Systems
+// 11. Collisions & Scoring Logic
 function checkCollisions() {
-  // Traffic Collision Check
+  // Hubinta isku-dhaca baabuurta kale
   for (let i = 0; i < trafficCars.length; i++) {
     let car = trafficCars[i];
     if (
@@ -204,7 +223,7 @@ function checkCollisions() {
     }
   }
 
-  // Coin Collection Check
+  // Hubinta soo uruurinta luulka / saraakiisha (Coins)
   for (let i = coinsList.length - 1; i >= 0; i--) {
     let gold = coinsList[i];
     let dist = Math.hypot((player.x + player.width / 2) - gold.x, (player.y + player.height / 2) - gold.y);
@@ -215,35 +234,39 @@ function checkCollisions() {
       coinsList.splice(i, 1);
     }
   }
-            }
-// Somali Highway Racer - Part 4: Game Loop & Control Functions
+}
+// Somali Highway Racer - Part 4: Game Loop & Controls Engine
 
-// 12. Main Game Loop Engine
+// 12. Main Game Loop
 function gameLoop() {
   if (!isGameRunning || isPaused) return;
 
-  // Clear Screen
+  // Screen-ka nadiifi
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Render Base Environment
+  // Soosaarista wadada iyo baabuurkaaga
   drawRoad();
   updatePlayerPhysics();
   drawPlayerCar();
 
-  // Spawning Objects
+  // Spawning Timers
   spawnTimer++;
-  if (spawnTimer % 90 === 0) spawnTraffic();
-  if (spawnTimer % 140 === 0) spawnCoin();
+  if (spawnTimer % 80 === 0) spawnTraffic();
+  if (spawnTimer % 130 === 0) spawnCoin();
 
   // Move & Draw Enemy Cars
   for (let i = trafficCars.length - 1; i >= 0; i--) {
     let car = trafficCars[i];
-    car.y += currentSpeed - car.speed;
+    car.y += currentSpeed - car.speed + 2;
 
     ctx.fillStyle = car.color;
     ctx.beginPath();
     ctx.roundRect(car.x, car.y, car.width, car.height, 8);
     ctx.fill();
+
+    // Muraayada baabuurta cadowga ah
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(car.x + 5, car.y + car.height - 22, car.width - 10, 16);
 
     if (car.y > canvas.height + 100) {
       trafficCars.splice(i, 1);
@@ -265,7 +288,7 @@ function gameLoop() {
     }
   }
 
-  // Check Collisions & Points
+  // Check Collisions & Score Updates
   checkCollisions();
   score += Math.floor(currentSpeed / 2);
   scoreVal.innerText = score;
@@ -274,7 +297,7 @@ function gameLoop() {
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// 13. State Handlers
+// 13. Game States
 function startGame() {
   menuModal.classList.add('hidden');
   garageModal.classList.add('hidden');
@@ -284,8 +307,8 @@ function startGame() {
   coins = 0;
   trafficCars = [];
   coinsList = [];
-  player.x = canvas.width / 2 - 21;
-  player.y = canvas.height - 120;
+  player.x = canvas.width / 2 - 20;
+  player.y = canvas.height - 110;
   isGameRunning = true;
   isPaused = false;
 
@@ -301,7 +324,7 @@ function endGame() {
   gameOverModal.classList.remove('hidden');
 }
 
-// 14. Button Event Listeners
+// 14. Event Listeners (Batoonada UI-ga)
 startPlayBtn.addEventListener('click', startGame);
 restartGameBtn.addEventListener('click', startGame);
 
@@ -325,5 +348,3 @@ pauseBtn.addEventListener('click', () => {
   isPaused = !isPaused;
   if (!isPaused) gameLoop();
 });
-
-                  
