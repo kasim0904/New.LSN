@@ -1,9 +1,9 @@
-// Somali Highway Racer - Dynamic Lane & Collision Fix Engine
+// Somali Highway Racer - Complete Fix Engine (No Safe Spots & Extreme Scaling)
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Responsive Canvas
+// Responsive Canvas Setup
 function resizeCanvas() {
   canvas.width = Math.min(window.innerWidth - 20, 420);
   canvas.height = window.innerHeight * 0.75;
@@ -52,18 +52,22 @@ const player = {
   color: '#38bdf8'
 };
 
-// Lane Calculator (Si Dynamic ah baabuurta loogu qeybiyo 3-da haad)
+// Road Margins & Precise Lane Calculations
+const ROAD_LEFT = 40;
+const ROAD_WIDTH = canvas.width - 80;
+const ROAD_RIGHT = ROAD_LEFT + ROAD_WIDTH;
+
+// Haadadka baabuurta cadowga ah iyo gaarigaaga loogu talagalay (Center Alignment)
 function getLanePositions() {
-  const roadWidth = canvas.width - 80;
-  const laneGap = roadWidth / 3;
+  const laneGap = ROAD_WIDTH / 3;
   return [
-    40 + (laneGap * 0.5) - 20, // Haadka 1-aad
-    40 + (laneGap * 1.5) - 20, // Haadka 2-aad
-    40 + (laneGap * 2.5) - 20  // Haadka 3-aad
+    ROAD_LEFT + (laneGap * 0.5) - 20, // Haadka Bidix (Left Lane Center)
+    ROAD_LEFT + (laneGap * 1.5) - 20, // Haadka Dhexe (Middle Lane Center)
+    ROAD_LEFT + (laneGap * 2.5) - 20  // Haadka Midig (Right Lane Center)
   ];
 }
 
-// Smooth Touch Controls
+// Controls (Touch Engine)
 let isTouching = false;
 let touchStartX = 0;
 let touchStartY = 0;
@@ -98,14 +102,16 @@ canvas.addEventListener('touchend', () => {
   isTouching = false;
 });
 
-// Player Physics & Boundary Locking
+// Player Physics & Strict Road Boundary (Gudaha Laamiga oo qiyaasan)
 function updatePlayerPhysics() {
   if (nitroAmount < maxNitro && !isNitroActive) nitroAmount += 0.15;
   nitroBar.style.width = `${(nitroAmount / maxNitro) * 100}%`;
 
   const lanes = getLanePositions();
-  const minX = lanes[0] - 10; // Xadka ugu dambeeya ee bidixda
-  const maxX = lanes[2] + 10; // Xadka ugu dambeeya ee midigta
+  
+  // Xadka gaarigaagu aadi karo si uusan u helin "Safe Spot" ee laamiga dhinacisa ah
+  const minX = lanes[0]; // Haadka bidix ee baabuurtu ka timaado
+  const maxX = lanes[2]; // Haadka midig ee baabuurtu ka timaado
 
   if (player.x < minX) player.x = minX;
   if (player.x > maxX) player.x = maxX;
@@ -116,34 +122,35 @@ function updatePlayerPhysics() {
   }
 }
 
-// Road Graphics
+// Environment Graphics
 function drawRoad() {
-  ctx.fillStyle = '#15803d';
+  ctx.fillStyle = '#15803d'; // Cawska
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const roadWidth = canvas.width - 80;
-  ctx.fillStyle = '#1e293b';
-  ctx.fillRect(40, 0, roadWidth, canvas.height);
+  ctx.fillStyle = '#1e293b'; // Laamiga
+  ctx.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, canvas.height);
 
   const kerbWidth = 8;
   roadOffset = (roadOffset + currentSpeed) % 40;
 
+  // Kerbs (Caddanka iyo Casaanka)
   for (let y = -40; y < canvas.height; y += 40) {
     ctx.fillStyle = (Math.floor((y + roadOffset) / 40) % 2 === 0) ? '#ef4444' : '#ffffff';
-    ctx.fillRect(32, y + roadOffset, kerbWidth, 40);
-    ctx.fillRect(canvas.width - 40, y + roadOffset, kerbWidth, 40);
+    ctx.fillRect(ROAD_LEFT - kerbWidth, y + roadOffset, kerbWidth, 40);
+    ctx.fillRect(ROAD_RIGHT, y + roadOffset, kerbWidth, 40);
   }
 
+  // Dhexda Laamiga (Lanes)
   ctx.fillStyle = '#f8fafc';
-  const laneGap = roadWidth / 3;
+  const laneGap = ROAD_WIDTH / 3;
 
   for (let y = -40; y < canvas.height; y += 50) {
-    ctx.fillRect(40 + laneGap - 2, y + roadOffset, 4, 25);
-    ctx.fillRect(40 + (laneGap * 2) - 2, y + roadOffset, 4, 25);
+    ctx.fillRect(ROAD_LEFT + laneGap - 2, y + roadOffset, 4, 25);
+    ctx.fillRect(ROAD_LEFT + (laneGap * 2) - 2, y + roadOffset, 4, 25);
   }
 }
 
-// Player Car Graphics
+// Player Graphics
 function drawPlayerCar() {
   ctx.save();
 
@@ -170,17 +177,18 @@ function drawPlayerCar() {
   ctx.restore();
 }
 
-// Traffic & Coins Engine
+// Traffic AI & Scaling Engine
 let trafficCars = [];
 let coinsList = [];
 let spawnTimer = 0;
 
+// Dynamic Frequency Calculation (Cadaadiska > 8,000 Score)
 function getSpawnInterval() {
   if (score > 8000) {
-    let reduction = Math.floor((score - 8000) / 400) * 4;
-    return Math.max(20, 65 - reduction);
+    let reduction = Math.floor((score - 8000) / 350) * 5;
+    return Math.max(16, 65 - reduction); // Baabuurta aad bay u soo batayaan (Heavy Traffic)
   }
-  return 80;
+  return 75;
 }
 
 function spawnTraffic() {
@@ -189,17 +197,18 @@ function spawnTraffic() {
   const colors = ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-  const isLaneOccupied = trafficCars.some(car => Math.abs(car.x - randomLane) < 15 && car.y < 140);
+  // Hubi haadka haddii uu ku jiro baabuur aad u dhow
+  const isLaneOccupied = trafficCars.some(car => car.x === randomLane && car.y < 140);
 
   if (!isLaneOccupied) {
-    let extraSpeed = score > 8000 ? Math.min(6, (score - 8000) / 1500) : 0;
+    let extraSpeed = score > 8000 ? Math.min(7, (score - 8000) / 1000) : 0;
 
     trafficCars.push({
       x: randomLane,
       y: -90,
       width: 40,
       height: 70,
-      speed: (Math.random() * 2 + 2) + extraSpeed,
+      speed: (Math.random() * 2.5 + 2) + extraSpeed,
       color: randomColor
     });
   }
@@ -245,8 +254,9 @@ function checkCollisions() {
 function gameLoop() {
   if (!isGameRunning || isPaused) return;
 
+  // High Speed Scale
   if (score > 8000) {
-    currentSpeed = baseSpeed + Math.min(8, (score - 8000) / 1200);
+    currentSpeed = baseSpeed + Math.min(10, (score - 8000) / 1000);
   } else {
     currentSpeed = baseSpeed;
   }
@@ -261,7 +271,7 @@ function gameLoop() {
   let currentSpawnRate = getSpawnInterval();
   
   if (spawnTimer % currentSpawnRate === 0) spawnTraffic();
-  if (spawnTimer % 130 === 0) spawnCoin();
+  if (spawnTimer % 120 === 0) spawnCoin();
 
   for (let i = trafficCars.length - 1; i >= 0; i--) {
     let car = trafficCars[i];
@@ -302,7 +312,7 @@ function gameLoop() {
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-// Game States & Buttons
+// State Management
 function startGame() {
   menuModal.classList.add('hidden');
   garageModal.classList.add('hidden');
@@ -329,6 +339,7 @@ function endGame() {
   gameOverModal.classList.remove('hidden');
 }
 
+// UI Event Listeners
 startPlayBtn.addEventListener('click', startGame);
 restartGameBtn.addEventListener('click', startGame);
 
@@ -352,3 +363,4 @@ pauseBtn.addEventListener('click', () => {
   isPaused = !isPaused;
   if (!isPaused) gameLoop();
 });
+                                               
